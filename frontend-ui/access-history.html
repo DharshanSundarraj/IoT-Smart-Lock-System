@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access History | SecureIoT</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      if (localStorage.getItem("adminAuth") !== "true") {
+        window.location.href = "login.html";
+      }
+      async function logout() {
+        if (typeof askConfirm === "function") {
+          const wantsToLogout = await askConfirm(
+            "Are you sure you want to securely log out of the admin console?",
+            "Secure Logout",
+            "Log Out",
+            "Cancel",
+          );
+          if (!wantsToLogout) return;
+        } else {
+          if (!confirm("Are you sure you want to securely log out?")) return;
+        }
+        localStorage.removeItem("adminAuth");
+        window.location.href = "login.html";
+      }
+    </script>
+
+    <style>
+      .table-container {
+        max-height: 550px;
+        overflow-y: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border-dark);
+      }
+      .table-container::-webkit-scrollbar {
+        width: 8px;
+      }
+      .table-container::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      .table-container::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      .table-container::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      .access-table th {
+        position: sticky;
+        top: 0;
+        background-color: #1e293b;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .access-table {
+        border: none;
+        margin: 0;
+        width: 100%;
+      }
+
+      .custom-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.85);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .custom-modal-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 25px;
+        width: 400px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+        text-align: left;
+      }
+      .custom-modal-overlay.active {
+        opacity: 1;
+      }
+      .custom-modal-overlay.active .custom-modal-card {
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="sidebar">
+      <div class="top-nav">
+        <div class="sidebar-brand">
+          <h2>SecureIoT <span>Admin</span></h2>
+        </div>
+        <ul class="nav-links">
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="user-management.html">User Management</a></li>
+          <li class="active">
+            <a href="access-history.html">Access History</a>
+          </li>
+          <li><a href="system-settings.html">System Settings</a></li>
+        </ul>
+      </div>
+      <div class="bottom-nav">
+        <button
+          onclick="logout()"
+          class="btn outline-btn"
+          style="
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.4);
+            width: 100%;
+          "
+        >
+          Secure Logout
+        </button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <header
+        class="top-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div>
+          <h1 class="page-title">Access History</h1>
+          <p class="page-subtitle">View and export all security events</p>
+        </div>
+        <button
+          id="csvBtn"
+          class="btn outline-btn"
+          style="width: auto; padding: 10px 20px"
+        >
+          Download CSV
+        </button>
+      </header>
+
+      <div class="dashboard-wrapper">
+        <div class="dark-card filter-container">
+          <input type="date" class="filter-input" />
+          <select id="statusFilter" class="filter-input" style="width: 210px">
+            <option value="All">All Events</option>
+            <option value="SUCCESS">Successful Only</option>
+            <option value="DECLINED">Declined Only</option>
+            <option value="MANUAL OVERRIDE">Manual Overrides</option>
+            <option value="SYSTEM_CONFIG">System Configs (Timers)</option>
+          </select>
+          <div class="search-wrapper">
+            <svg
+              class="search-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              id="searchInput"
+              class="filter-input search-input"
+              placeholder="Search user..."
+            />
+          </div>
+        </div>
+
+        <section class="logs-section dark-card" style="padding: 15px">
+          <div class="table-container">
+            <table class="access-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Email / User</th>
+                  <th>Status</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="logTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div id="customConfirmModal" class="custom-modal-overlay">
+      <div class="custom-modal-card">
+        <h3
+          style="
+            margin-top: 0;
+            color: #f8fafc;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          "
+        >
+          <svg
+            id="confirmIcon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#f59e0b"
+            stroke-width="2"
+          ></svg>
+          <span id="confirmTitle">System Action</span>
+        </h3>
+        <p
+          id="confirmMessage"
+          style="
+            color: #94a3b8;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+          "
+        ></p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px">
+          <button
+            id="confirmCancelBtn"
+            class="btn outline-btn"
+            style="margin: 0; padding: 10px 20px"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirmOkBtn"
+            class="btn primary-btn"
+            style="margin: 0; padding: 10px 20px; border: none"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function askConfirm(
+        message,
+        title = "System Override Required",
+        okText = "Overwrite Profile",
+        cancelText = "Abort",
+      ) {
+        return new Promise((resolve) => {
+          const modal = document.getElementById("customConfirmModal");
+          const icon = document.getElementById("confirmIcon");
+          const okBtn = document.getElementById("confirmOkBtn");
+
+          document.getElementById("confirmMessage").innerText = message;
+          document.getElementById("confirmTitle").innerText = title;
+          okBtn.innerText = okText;
+          document.getElementById("confirmCancelBtn").innerText = cancelText;
+
+          if (title.includes("Logout")) {
+            icon.innerHTML =
+              '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>';
+            icon.setAttribute("stroke", "#3b82f6");
+            okBtn.style.backgroundColor = "#3b82f6";
+          } else {
+            icon.innerHTML =
+              '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>';
+            icon.setAttribute("stroke", "#f59e0b");
+            okBtn.style.backgroundColor = "#ef4444";
+          }
+
+          modal.style.display = "flex";
+          setTimeout(() => modal.classList.add("active"), 10);
+
+          okBtn.onclick = () => {
+            modal.classList.remove("active");
+            setTimeout(() => {
+              modal.style.display = "none";
+              resolve(true);
+            }, 300);
+          };
+
+          document.getElementById("confirmCancelBtn").onclick = () => {
+            modal.classList.remove("active");
+            setTimeout(() => {
+              modal.style.display = "none";
+              resolve(false);
+            }, 300);
+          };
+        });
+      }
+
+      const API_URL = "http://localhost:8080/api/logs";
+      let allLogs = [];
+
+      async function fetchLiveLogs() {
+        try {
+          const response = await fetch(API_URL);
+          allLogs = await response.json();
+          renderTable();
+        } catch (error) {
+          console.error("API Error:", error);
+        }
+      }
+
+      function renderTable() {
+        const tableBody = document.getElementById("logTableBody");
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const dateFilter = document.querySelector('input[type="date"]').value;
+        const statusFilter = document.getElementById("statusFilter").value;
+
+        tableBody.innerHTML = "";
+        const sortedLogs = [...allLogs].reverse();
+
+        sortedLogs.forEach((log) => {
+          const logDateObj = new Date(log.timestamp);
+          const logDateString = logDateObj.toISOString().split("T")[0];
+          const readableTime = logDateObj.toLocaleString();
+          const searchString =
+            `${log.userEmail} ${log.accessStatus}`.toLowerCase();
+
+          if (searchTerm && !searchString.includes(searchTerm)) return;
+          if (dateFilter && dateFilter !== logDateString) return;
+
+          if (
+            statusFilter === "SYSTEM_CONFIG" &&
+            !log.accessStatus.startsWith("TIMER_")
+          )
+            return;
+          if (
+            statusFilter !== "All" &&
+            statusFilter !== "SYSTEM_CONFIG" &&
+            log.accessStatus !== statusFilter
+          )
+            return;
+
+          let badgeColor = "#fbbf24";
+          if (log.accessStatus === "SUCCESS") badgeColor = "#10b981";
+          else if (log.accessStatus === "DECLINED") badgeColor = "#ef4444";
+          else if (log.accessStatus.startsWith("TIMER_"))
+            badgeColor = "#3b82f6";
+
+          tableBody.innerHTML += `<tr>
+              <td>#${log.id}</td>
+              <td><strong>${log.userEmail}</strong></td>
+              <td style="color: ${badgeColor}; font-weight: 600;">${log.accessStatus}</td>
+              <td>${readableTime}</td>
+            </tr>`;
+        });
+      }
+
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", renderTable);
+      document
+        .querySelector('input[type="date"]')
+        .addEventListener("change", renderTable);
+      document
+        .getElementById("statusFilter")
+        .addEventListener("change", renderTable);
+
+      fetchLiveLogs();
+      setInterval(fetchLiveLogs, 3000);
+
+      document.getElementById("csvBtn").addEventListener("click", () => {
+        let csvContent =
+          "data:text/csv;charset=utf-8,ID,User/Email,Status,Timestamp\n";
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const dateFilter = document.querySelector('input[type="date"]').value;
+        const statusFilter = document.getElementById("statusFilter").value;
+        const sortedLogs = [...allLogs].reverse();
+
+        sortedLogs.forEach((log) => {
+          const logDateString = new Date(log.timestamp)
+            .toISOString()
+            .split("T")[0];
+          const searchString =
+            `${log.userEmail} ${log.accessStatus}`.toLowerCase();
+
+          let passesStatusFilter = true;
+          if (
+            statusFilter === "SYSTEM_CONFIG" &&
+            !log.accessStatus.startsWith("TIMER_")
+          )
+            passesStatusFilter = false;
+          if (
+            statusFilter !== "All" &&
+            statusFilter !== "SYSTEM_CONFIG" &&
+            log.accessStatus !== statusFilter
+          )
+            passesStatusFilter = false;
+
+          if (
+            (!searchTerm || searchString.includes(searchTerm)) &&
+            (!dateFilter || dateFilter === logDateString) &&
+            passesStatusFilter
+          ) {
+            csvContent += `"${log.id}","${log.userEmail}","${log.accessStatus}","${new Date(log.timestamp).toLocaleString()}"\n`;
+          }
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.href = encodedUri;
+        link.download = `SecureIoT_AuditLog_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secure Login | SecureIoT Admin</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --primary-blue: #3b82f6;
+        --primary-hover: #2563eb;
+        --text-light: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-dark: #334155;
+        --danger: #ef4444;
+        --success: #10b981;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header-section {
+        text-align: center;
+        margin-bottom: 30px;
+        transition: opacity 0.5s ease;
+      }
+      .header-section h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .header-section p {
+        color: var(--text-muted);
+        font-size: 1rem;
+      }
+
+      .login-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-dark);
+        border-radius: 8px;
+        padding: 40px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.5s ease;
+      }
+
+      .info-bar {
+        border-left: 3px solid var(--primary-blue);
+        padding-left: 15px;
+        margin-bottom: 30px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .input-group {
+        margin-bottom: 20px;
+      }
+      .input-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .input-icon {
+        position: absolute;
+        left: 15px;
+        color: var(--text-muted);
+        width: 18px;
+        height: 18px;
+        z-index: 10;
+      }
+
+      .form-input {
+        width: 100%;
+        background-color: rgba(15, 23, 42, 0.85);
+        border: 1px solid var(--border-dark);
+        border-radius: 6px;
+        padding: 14px 15px 14px 45px;
+        color: #ffffff !important;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+      .form-input::placeholder {
+        color: #64748b;
+        transition: opacity 0.3s ease;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        background-color: rgba(15, 23, 42, 1);
+      }
+      .form-input:focus::placeholder {
+        opacity: 0.5;
+      }
+
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+        -webkit-text-fill-color: #ffffff !important;
+      }
+
+      .eye-btn {
+        position: absolute;
+        right: 15px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        padding: 0;
+      }
+      .eye-btn:hover {
+        color: var(--text-light);
+      }
+      .options-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+      }
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+      }
+      .forgot-link {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .forgot-link:hover {
+        text-decoration: underline;
+      }
+
+      .login-btn {
+        background-color: var(--primary-blue);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 14px;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+      }
+      .login-btn:hover {
+        background-color: var(--primary-hover);
+      }
+      .login-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      /* --- NEW ANIMATIONS --- */
+      #loginFormContainer {
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s ease;
+      }
+      .fade-out {
+        opacity: 0;
+        transform: scale(0.95);
+        pointer-events: none;
+      }
+
+      /* Success Overlay */
+      #successOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+        z-index: 50;
+      }
+      #successOverlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      @keyframes shieldUnlock {
+        0% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .success-icon {
+        animation: shieldUnlock 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          forwards;
+      }
+
+      /* Error Toast */
+      #toastContainer {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .custom-toast {
+        background-color: #1e293b;
+        color: #f8fafc;
+        border-left: 4px solid var(--danger);
+        padding: 16px 24px;
+        border-radius: 6px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transform: translateX(120%);
+        animation:
+          slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+          fadeOutToast 0.4s ease forwards 4s;
+      }
+      @keyframes slideInToast {
+        to {
+          transform: translateX(0);
+        }
+      }
+      @keyframes fadeOutToast {
+        to {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+      }
+
+      /* Shake effect for wrong password */
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-5px);
+        }
+        40%,
+        80% {
+          transform: translateX(5px);
+        }
+      }
+      .shake {
+        animation: shake 0.4s ease;
+      }
+
+      /* Loading Spinner */
+      .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid #fff;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-section" id="mainHeader">
+      <h1>Secure Admin</h1>
+      <p>Enterprise Access Management</p>
+    </div>
+
+    <div class="login-card" id="mainCard">
+      <div id="successOverlay">
+        <svg
+          class="success-icon"
+          width="80"
+          height="80"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--success)"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+          "
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+        <h2
+          style="
+            color: var(--success);
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+          "
+        >
+          ACCESS GRANTED
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem">
+          Establishing secure connection...
+        </p>
+      </div>
+
+      <div id="loginFormContainer">
+        <div class="info-bar">
+          Please enter your administrative credentials to access the IoT lock
+          control panel and audit logs.
+        </div>
+
+        <form id="loginForm">
+          <div class="input-group">
+            <label>Administrator ID</label>
+            <div class="input-wrapper">
+              <svg
+                class="input-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <input
+                type="email"
+                id="email"
+                class="form-input"
+                placeholder="admin@secureiot.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Security Key</label>
+            <div class="input-wrapper">
+              <svg
+                class="input-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input
+                type="password"
+                id="password"
+                class="form-input"
+                placeholder="••••••••"
+                required
+              />
+              <button type="button" class="eye-btn" id="togglePassword">
+                <svg
+                  id="eyeIconOpen"
+                  style="display: none"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg
+                  id="eyeIconClosed"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  ></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="options-row">
+            <label class="checkbox-wrapper"
+              ><input type="checkbox" checked /> Remember this device</label
+            >
+            <a href="#" class="forgot-link">Reset Key?</a>
+          </div>
+
+          <button type="submit" class="login-btn" id="loginBtn">
+            <div class="spinner" id="btnSpinner"></div>
+            <span id="btnText">Secure Login</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script>
+      // Password Toggle
+      const togglePasswordBtn = document.getElementById("togglePassword");
+      const passwordInput = document.getElementById("password");
+      togglePasswordBtn.addEventListener("click", () => {
+        const isPass = passwordInput.type === "password";
+        passwordInput.type = isPass ? "text" : "password";
+        document.getElementById("eyeIconClosed").style.display = isPass
+          ? "none"
+          : "block";
+        document.getElementById("eyeIconOpen").style.display = isPass
+          ? "block"
+          : "none";
+      });
+
+      // Error Toast Logic
+      function showError(message) {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = "custom-toast";
+        toast.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>${message}</span>`;
+        container.appendChild(toast);
+
+        // Add shake animation to card
+        const card = document.getElementById("mainCard");
+        card.classList.add("shake");
+        setTimeout(() => card.classList.remove("shake"), 400);
+        setTimeout(() => toast.remove(), 4500);
+      }
+
+      // Handle Login Submit
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          const loginBtn = document.getElementById("loginBtn");
+          const btnText = document.getElementById("btnText");
+          const btnSpinner = document.getElementById("btnSpinner");
+
+          // UI Loading State
+          loginBtn.disabled = true;
+          btnText.textContent = "Authenticating...";
+          btnSpinner.style.display = "block";
+
+          try {
+            const response = await fetch(
+              "http://127.0.0.1:8080/api/users/login",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email, password: password }),
+              },
+            );
+
+            if (response.ok) {
+              localStorage.setItem("adminAuth", "true");
+
+              // TRIGGER CINEMATIC SUCCESS ANIMATION
+              document
+                .getElementById("loginFormContainer")
+                .classList.add("fade-out");
+              document.getElementById("mainHeader").style.opacity = "0";
+
+              setTimeout(() => {
+                document
+                  .getElementById("successOverlay")
+                  .classList.add("active");
+                // Wait 1.5s for the user to see the success message, then redirect
+                setTimeout(() => {
+                  window.location.href = "index.html";
+                }, 1500);
+              }, 400);
+            } else {
+              const errorData = await response.json();
+              showError(
+                errorData.message ||
+                  "Invalid Administrator ID or Security Key.",
+              );
+              resetBtn();
+            }
+          } catch (error) {
+            showError("Connection failed. Is the Spring Boot server running?");
+            resetBtn();
+          }
+
+          function resetBtn() {
+            loginBtn.disabled = false;
+            btnText.textContent = "Secure Login";
+            btnSpinner.style.display = "none";
+          }
+        });
+    </script>
+  </body>
+</html>
