@@ -25,7 +25,7 @@ Rather than focus on edge microcontroller firmware or client mobile apps, my res
 
 Because the physical edge devices operate on local hardware networks, the system's architecture and backend resilience are demonstrated via server telemetry, API routing, and recognition logs.
 
-### 1. Advanced Liveness Detection & UI Dashboard
+### 1. Advanced Liveness Detection
 
 _(Demonstrating the computer vision module executing an anti-spoofing "blink" check before verifying the ID against the database, overlaying the custom React/JS dashboard)._
 
@@ -35,7 +35,19 @@ _(Demonstrating the computer vision module executing an anti-spoofing "blink" ch
   <img src="assets/liveness-verified.png" alt="Verification Success" width="45%">
 </p>
 
-### 2. Network Resilience & Auto-Recovery
+### 2. Custom Administrative Dashboard
+
+_Re-engineered the edge-device streaming interface to include real-time telemetry, access logs, and a modernized UI._
+
+<div align="center">
+  <img src="assets/dashboard.png" alt="Dynamic Web Dashboard" width="700">
+</div>
+
+<div align="center">
+  <img src="assets/access-history.png" alt="Dynamic Access History" width="700">
+</div>
+
+### 3. Network Resilience & Auto-Recovery
 
 _IoT edge devices frequently drop connections. I engineered a robust auto-recovery loop that detects HTTP timeouts, catches the connection exception, and automatically re-establishes the socket connection with the ESP32 without crashing the backend server._
 
@@ -43,7 +55,7 @@ _IoT edge devices frequently drop connections. I engineered a robust auto-recove
   <img src="assets/auto-recovery.png" alt="Auto-Recovery Terminal Logs" width="800">
 </div>
 
-### 3. Secure API Routing via ngrok
+### 4. Secure API Routing via ngrok
 
 _Demonstrating real-time HTTP request processing. The server actively handles `GET` and `POST` requests to the `/api/logs` endpoints, securely tunneling local server traffic for remote administrative access._
 
